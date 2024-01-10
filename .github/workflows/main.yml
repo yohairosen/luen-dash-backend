@@ -13,16 +13,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Copy repository to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-        port: 22
-        source: "."
-        target: "/path/to/your/directory"
-
     - name: SSH and Pull
       uses: appleboy/ssh-action@master
       with:
@@ -31,5 +21,5 @@ jobs:
         key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          cd /path/to/your/directory
+          cd /luen-dash-backend
           git pull

@@ -10,6 +10,7 @@ from flask_cors import CORS
 
 from .routes import rest_api
 from .models import db
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 
@@ -18,6 +19,8 @@ app.config.from_object('api.config.BaseConfig')
 db.init_app(app)
 rest_api.init_app(app)
 CORS(app)
+
+migrate = Migrate(app, db)
 
 # Setup database
 @app.before_first_request

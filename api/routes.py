@@ -65,9 +65,10 @@ admin_avatar_model = rest_api.model('AdminAvatar', {
 })
 
 
-post_model = rest_api.model('Post', {
-    'media_id': fields.String(required=False, description='Media URL of the post'),
+post_model = admin_api.model('Post', {
+    'media_id': fields.String(required=True, description='Media URL of the post'),
     'content': fields.String(required=True, description='Content of the post'),
+    'customer_email': fields.String(required=True, description='email of the owner of the avatar'),
     # Add other fields as necessary, based on your Post model structure
 })
 
@@ -310,9 +311,9 @@ class GetUserStats(Resource):
 @admin_api.route('/posts')
 class AdminUserAvatarPostResource(Resource):
 
-    @rest_api.expect(post_model)
+    @admin_api.expect(post_model, validate=True)
     def post(self):
-        req_data = request.get_json()
+        req_data = admin_api.payload
         email = req_data.get('customer_email')  # Ensure 'email' is passed in the request body
 
         # Find the user by email
@@ -325,22 +326,37 @@ class AdminUserAvatarPostResource(Resource):
         if not avatar:
             return {"message": "No avatars found for user with email: " + email}, 404
 
-        # Optional: Check if the current_user has the privilege to create a post for this avatar
-        # if not current_user.is_authorized_for_avatar(user.id, avatar.id):
-        #     return {"message": "Unauthorized"}, 403
+        # Check for an existing post with the same media_id
+        media_id = req_data.get('media_id')
+        existing_post = Post.query.filter_by(media_id=media_id, avatar_id=avatar.id).first()
 
-        new_post = Post(
-            avatar_id=avatar.id,
-            media_id=req_data.get('media_id'),
-            content=req_data.get('content'),
-            # Add other fields as necessary
-        )
+        if existing_post:
+            # Update the existing post
+            existing_post.content = req_data.get('content')
+            existing_post.media_id = media_id
+            if req_data.get('status'):
+                existing_post.status = req_data.get('status')
+            # Update other fields as necessary
+            message = "Post updated successfully"
+        else:
+            # Create a new post
+            new_post = Post(
+                avatar_id=avatar.id,
+                media_id=media_id,
+                content=req_data.get('content'),
+                # Add other fields as necessary
 
-        db.session.add(new_post)
+            )
+            # Assign status only if it's present and not empty
+            status = req_data.get('status')
+            if status:
+                new_post.status = status
+
+            db.session.add(new_post)
+            message = "Post created successfully"
+
         db.session.commit()
-
-        return {"message": "Post created successfully for avatar " + str(avatar.id)}, 201
-
+        return {"message": message + " for avatar " + str(avatar.id)}, 200
 # Add this namespace to your Flask-RESTx Api instance
 rest_api.add_namespace(admin_api, path='/api/admin')
 

@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from functools import wraps
 
 from flask import request
-from flask_restx import Api, Resource, fields
+from flask_restx import Api, Resource, fields, Namespace
 
 import jwt
 
@@ -33,6 +33,9 @@ service = build('drive', 'v3', credentials=credentials)
 rest_api = Api(version="1.0", title="Users API")
 
 
+rest_api = Namespace('admin', description='Admin operations')
+
+
 """
     Flask-Restx models for api request and response data
 """
@@ -55,14 +58,6 @@ user_edit_model = rest_api.model('UserEditModel', {"userID": fields.String(requi
 
 admin_avatar_model = rest_api.model('AdminAvatar', {
     'user_id': fields.Integer(required=True, description='ID of the user for whom the avatar is being created'),
-    'name': fields.String(required=True, description='Name of the avatar'),
-    'profile_image_id': fields.String(required=False, description='Profile image URL of the avatar'),
-    'followers': fields.Integer(required=False, default=0, description='Number of followers of the avatar'),
-    'following': fields.Integer(required=False, default=0, description='Number of users the avatar is following'),
-})
-
-
-avatar_model = rest_api.model('Avatar', {
     'name': fields.String(required=True, description='Name of the avatar'),
     'profile_image_id': fields.String(required=False, description='Profile image URL of the avatar'),
     'followers': fields.Integer(required=False, default=0, description='Number of followers of the avatar'),
@@ -250,58 +245,10 @@ class LogoutUser(Resource):
         return {"success": True}, 200
 
 
-@rest_api.route('/api/sessions/oauth/github/')
-class GitHubLogin(Resource):
-    def get(self):
-        code = request.args.get('code')
-        client_id = BaseConfig.GITHUB_CLIENT_ID
-        client_secret = BaseConfig.GITHUB_CLIENT_SECRET
-        root_url = 'https://github.com/login/oauth/access_token'
-
-        params = { 'client_id': client_id, 'client_secret': client_secret, 'code': code }
-
-        data = requests.post(root_url, params=params, headers={
-            'Content-Type': 'application/x-www-form-urlencoded',
-        })
-
-        response = data._content.decode('utf-8')
-        access_token = response.split('&')[0].split('=')[1]
-
-        user_data = requests.get('https://api.github.com/user', headers={
-            "Authorization": "Bearer " + access_token
-        }).json()
-        
-        user_exists = Users.get_by_username(user_data['login'])
-        if user_exists:
-            user = user_exists
-        else:
-            try:
-                user = Users(username=user_data['login'], email=user_data['email'])
-                user.save()
-            except:
-                user = Users(username=user_data['login'])
-                user.save()
-        
-        user_json = user.toJSON()
-
-        token = jwt.encode({"username": user_json['username'], 'exp': datetime.utcnow() + timedelta(minutes=30)}, BaseConfig.SECRET_KEY)
-        user.set_jwt_auth_active(True)
-        user.save()
-
-        return {"success": True,
-                "user": {
-                    "_id": user_json['_id'],
-                    "email": user_json['email'],
-                    "username": user_json['username'],
-                    "token": token,
-                }}, 200
-
-
 
 @rest_api.route('/api/avatars')
 class AvatarResource(Resource):
     
-    @rest_api.expect(avatar_model)
     @token_required
     def get(self,current_user):
         # Fetch the avatar based on the current_user's ID
@@ -360,25 +307,30 @@ class GetUserStats(Resource):
         stats = current_user.get_stats()
         return {"success": True, "stats": stats}, 200
 
-
-@rest_api.route('/api/users/<int:user_id>/avatars/posts')
+@rest_api.route('/api/admin/posts')
 class AdminUserAvatarPostResource(Resource):
 
-    @rest_api.expect(post_model)  # Ensure post_model is defined according to your Post schema
-    def post(self, user_id):
+    @rest_api.expect(post_model)
+    def post(self):
         req_data = request.get_json()
+        email = req_data.get('customer_email')  # Ensure 'email' is passed in the request body
+
+        # Find the user by email
+        user = Users.query.filter_by(email=email).first()
+        if not user:
+            return {"message": "User not found"}, 404
+
+        # Find the first avatar for the user
+        avatar = Avatar.query.filter_by(user_id=user.id).first()
+        if not avatar:
+            return {"message": "No avatars found for user with email: " + email}, 404
 
         # Optional: Check if the current_user has the privilege to create a post for this avatar
-        # if not current_user.is_authorized_for_avatar(user_id, avatar_id):
+        # if not current_user.is_authorized_for_avatar(user.id, avatar.id):
         #     return {"message": "Unauthorized"}, 403
 
-        avatar = Avatar.query.filter_by(user_id=user_id).first()
-        if not avatar:
-            return {"message": "No avatars found for user " + str(user_id)}, 404
-        avatar_id = avatar.id
-
         new_post = Post(
-            avatar_id=avatar_id,
+            avatar_id=avatar.id,
             media_id=req_data.get('media_id'),
             content=req_data.get('content'),
             # Add other fields as necessary
@@ -387,9 +339,10 @@ class AdminUserAvatarPostResource(Resource):
         db.session.add(new_post)
         db.session.commit()
 
-        return {"message": "Post created successfully for avatar " + str(avatar_id)}, 201
+        return {"message": "Post created successfully for avatar " + str(avatar.id)}, 201
 
-
+# Add this namespace to your Flask-RESTx Api instance
+rest_api.add_namespace(rest_api)
 
 @rest_api.route('/api/posts')
 class UserPosts(Resource):

@@ -33,7 +33,7 @@ service = build('drive', 'v3', credentials=credentials)
 rest_api = Api(version="1.0", title="Users API")
 
 
-rest_api = Namespace('admin', description='Admin operations')
+admin_api = Namespace('admin', description='Admin operations')
 
 
 """
@@ -307,7 +307,7 @@ class GetUserStats(Resource):
         stats = current_user.get_stats()
         return {"success": True, "stats": stats}, 200
 
-@rest_api.route('/api/admin/posts')
+@admin_api.route('/posts')
 class AdminUserAvatarPostResource(Resource):
 
     @rest_api.expect(post_model)
@@ -342,7 +342,7 @@ class AdminUserAvatarPostResource(Resource):
         return {"message": "Post created successfully for avatar " + str(avatar.id)}, 201
 
 # Add this namespace to your Flask-RESTx Api instance
-rest_api.add_namespace(rest_api)
+rest_api.add_namespace(admin_api, path='/api/admin')
 
 @rest_api.route('/api/posts')
 class UserPosts(Resource):

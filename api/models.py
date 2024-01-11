@@ -114,7 +114,7 @@ class JWTTokenBlocklist(db.Model):
 class Avatar(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64), nullable=False)
-    profile_image_url = db.Column(db.String(255))
+    profile_image_id = db.Column(db.String(255))
     followers = db.Column(db.Integer(), default=0)
     following = db.Column(db.Integer(), default=0)
 
@@ -132,7 +132,7 @@ class Avatar(db.Model):
 class Post(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     timestamp = db.Column(db.DateTime(), default=datetime.utcnow)
-    media_url = db.Column(db.String(255))
+    media_id = db.Column(db.String(255))
     status = db.Column(db.String(32), default="Pending") # Consider using Enum for status
     content = db.Column(db.Text(), default='')
 

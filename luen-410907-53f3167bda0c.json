@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "luen-410907",
+  "private_key_id": "53f3167bda0ccd54608a74f2e044a3903da22548",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDbRrh4hJTAxGv9\nfakF1SWnKLbLDFXAiIPWYIDjGaF+kzVd6XqplqPKBLf33S1XehaBhOHWf0kK2ne+\nSm2fQUOB8EyuOy5otrJVQ9il1JNSodzc75rgSTaCtTTQ/cLf92gYSFzQGOw/mhqq\nUXt4J/VFJTcLZPYaNCp6wp4U3kfay/aSzWwE8mlheQ44xuavxjS7N67hnrQptA8q\nMgOBxfowiRJpq5sqLQWSFI2D1d2bhJRYCm5RoOfvtvO1cK3LjV+NQU9YQzga5Rr8\n6wsfykWWmZ/it4bdtU0l1laXHf+uqiSxZdV+oItm8uF7P53TsgeySmpIDeqGm/pk\nZkS18yjBAgMBAAECggEABNPk4HGaBtGsR2UtxGObelEvdeWV7VdagIZ/Myc2ArmB\n/ZXUFG/56v45ZxS9ch7nG1ka62QoOwikhauE1PJ7M1BGyx7UpQvBffzjt071VjOB\ngqaOpEaB+ggitNrWOgq4uRdXkWG8sQlj2E3swbBh7YpMUNnOgBtkhG+Zff/tpasF\ns67bN807+jxEPvikgTlTz7sFPo8c67M90QOWXjiuWCAVSlGpRo2WG8lGB7Gw6qLK\nQLmflaFEusmUNcLnWxVYNTtkgdnkBmJ+NvTSoSjH0HlXVh2vfppHQmDQOqzvTXJa\nYp1Ui7EdKuBdi3DXPjtV9FiLgwT1T+LCwWB1bM1pmQKBgQDvh7kkFmeWzRnAoHjT\naJAOeKaWIl1c0dQaUNbr+yiH9pk/27ydUzxUCXFeUD1TsTN2a312ZmQjVcXf2ngm\n+46BEvFqLDZ6sUOU1teGTSkrTkpk1yKVmnutyHqmRnd6eXoShEMy52OlShvAiKfc\ntTglEngVjjTdag5+BQbBrxAi3QKBgQDqWnt38wEGFxHzefNLItWpc8KDQZiMBF6m\nQnoOEVlgRS4u2SIJUPD3aCMekLPObignCm63b1FI8nSL7Sdqcfr8Lp/aBbWl/1pX\n0MQOAej6+c8PbNb+hJv9vgoXfKzE+dk30BxqKsm0/JRYCRwqh4fQsLrZFoUXHDhs\nU7tYJrolNQKBgCTVfDT+dQONmq4yfyITbEOtbgCcXDsP0UwSrlovjzYJR9u4ELMo\nv5g0s4hLUoLyNvW45dw1NqTwZbNcxylHecyDezhWgDIx3DChMRdn+jK8oVgMdTcI\nQIii0amMIIdm8syyJhtH1dzvHoFnAllATNf2lRzLd3ms+3mJkFZsc1DJAoGBALw1\nyL0Piv3yHzeT9CGeq0u4rTmuv62LgNwzvUR5CHd5d9qmBWDIAY4gszvD6LPb4iFg\njoSBQR29on4SCzrAqVpIs5ZsSXM0PcES57F8NTkC0RlJRu0HYSQKsJ4mQba8FYhu\nebOGA5J320dMobNCP4AJvzXDkUV7I5FUObxU9eAVAoGAGHjPgMo3xGiCMtF/ukbg\nyUVdMESLlPFPUwLNDuQnHxlACmIrCJoyDAI91jMde1yS2EuuNLysVUarS7cRPwT8\ncZGObTjdCrG6WGc0aWiCUWFmPADaiNOZ1Q0JndrGd63eIgc7gYr4zN9vSUSUFwJz\njwSnb9KEZX5DcgQgPkQDsNA=\n-----END PRIVATE KEY-----\n",
+  "client_email": "luen-media-access@luen-410907.iam.gserviceaccount.com",
+  "client_id": "107313256807683342658",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/luen-media-access%40luen-410907.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

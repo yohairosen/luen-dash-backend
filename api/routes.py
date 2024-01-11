@@ -16,6 +16,20 @@ from .models import Post, db, Users, Avatar, JWTTokenBlocklist
 from .config import BaseConfig
 import requests
 
+
+from googleapiclient.discovery import build
+from google.oauth2 import service_account
+
+# Google Drive API setup
+SERVICE_ACCOUNT_FILE = 'luen-410907-53f3167bda0c.json'
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+credentials = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+
+service = build('drive', 'v3', credentials=credentials)
+
+
+
 rest_api = Api(version="1.0", title="Users API")
 
 
@@ -42,7 +56,7 @@ user_edit_model = rest_api.model('UserEditModel', {"userID": fields.String(requi
 admin_avatar_model = rest_api.model('AdminAvatar', {
     'user_id': fields.Integer(required=True, description='ID of the user for whom the avatar is being created'),
     'name': fields.String(required=True, description='Name of the avatar'),
-    'profile_image_url': fields.String(required=False, description='Profile image URL of the avatar'),
+    'profile_image_id': fields.String(required=False, description='Profile image URL of the avatar'),
     'followers': fields.Integer(required=False, default=0, description='Number of followers of the avatar'),
     'following': fields.Integer(required=False, default=0, description='Number of users the avatar is following'),
 })
@@ -50,14 +64,14 @@ admin_avatar_model = rest_api.model('AdminAvatar', {
 
 avatar_model = rest_api.model('Avatar', {
     'name': fields.String(required=True, description='Name of the avatar'),
-    'profile_image_url': fields.String(required=False, description='Profile image URL of the avatar'),
+    'profile_image_id': fields.String(required=False, description='Profile image URL of the avatar'),
     'followers': fields.Integer(required=False, default=0, description='Number of followers of the avatar'),
     'following': fields.Integer(required=False, default=0, description='Number of users the avatar is following'),
 })
 
 
 post_model = rest_api.model('Post', {
-    'media_url': fields.String(required=False, description='Media URL of the post'),
+    'media_id': fields.String(required=False, description='Media URL of the post'),
     'content': fields.String(required=True, description='Content of the post'),
     # Add other fields as necessary, based on your Post model structure
 })
@@ -102,6 +116,22 @@ def token_required(f):
         return f(*args, current_user=current_user, **kwargs)
 
     return decorator
+
+
+
+
+
+
+
+def get_media_thumb(file_id):
+    # Assuming current_user has a one-to-many relationship with Avatar
+    # Request the file metadata from Google Drive
+    file_metadata = service.files().get(fileId=file_id, fields='thumbnailLink').execute()
+
+    thumbnail_url = file_metadata.get('thumbnailLink', None)
+
+    return thumbnail_url
+
 
 
 """
@@ -283,7 +313,7 @@ class AvatarResource(Resource):
                 "avatar": {
                    'id': avatar.id,
                     'name': avatar.name,
-                    'profile_image_url': avatar.profile_image_url,
+                    'profile_image_url': get_media_thumb(avatar.profile_image_id),
                     'followers': avatar.followers,
                     'following': avatar.following
                 }}, 200
@@ -307,7 +337,7 @@ class AdminAvatarResource(Resource):
         new_avatar = Avatar(
             user_id=user_id,
             name=req_data.get('name'),
-            profile_image_url=req_data.get('profile_image_url'),
+            profile_image_id=req_data.get('profile_image_id'),
             followers=req_data.get('followers', 0),
             following=req_data.get('following', 0)
         )
@@ -349,7 +379,7 @@ class AdminUserAvatarPostResource(Resource):
 
         new_post = Post(
             avatar_id=avatar_id,
-            media_url=req_data.get('media_url'),
+            media_id=req_data.get('media_id'),
             content=req_data.get('content'),
             # Add other fields as necessary
         )
@@ -374,7 +404,7 @@ class UserPosts(Resource):
             posts_data = [{
                 'id': post.id,
                 'timestamp': post.timestamp.isoformat(),
-                'media_url': post.media_url,
+                'media_url': get_media_thumb(post.media_id),
                 'status': post.status,
                 'content': post.content
             } for post in posts]
@@ -382,3 +412,21 @@ class UserPosts(Resource):
             return {'success': True, 'posts': posts_data}, 200
         else:
             return {'success': False, 'message': 'No avatar found for the user'}, 404
+
+
+# @rest_api.route('/api/thumb')
+# class DriveResource(Resource):
+
+#     def get(self):
+#         # Assuming current_user has a one-to-many relationship with Avatar
+#         # Request the file metadata from Google Drive
+#         file_metadata = service.files().get(fileId='1azj7rkZwS1WzMdz3-OEP-HaVjKGPDLSr', fields='thumbnailLink').execute()
+
+#         thumbnail_url = file_metadata.get('thumbnailLink', None)
+
+#         if thumbnail_url:
+#             return {'success': True, 'thumb': thumbnail_url}, 200
+#         else:
+#             return {'success': False, 'message': 'No thumb found for the id'}, 404
+
+

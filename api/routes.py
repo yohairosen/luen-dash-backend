@@ -49,10 +49,16 @@ login_model = rest_api.model('LoginModel', {"email": fields.String(required=True
                                             "password": fields.String(required=True, min_length=4, max_length=16)
                                             })
 
-user_edit_model = rest_api.model('UserEditModel', {"userID": fields.String(required=True, min_length=1, max_length=32),
-                                                   "username": fields.String(required=True, min_length=2, max_length=32),
-                                                   "email": fields.String(required=True, min_length=4, max_length=64)
-                                                   })
+user_create_or_update_model = rest_api.model('UserCreateOrUpdateModel', {
+    "userID": fields.String(required=False, min_length=1, max_length=32),
+    "username": fields.String(required=True, min_length=2, max_length=32),
+    "email": fields.String(required=True, min_length=4, max_length=64),
+    "spend_total": fields.Float(required=False),
+    "spend_month": fields.Float(required=False),
+    "leads_count": fields.Integer(required=False)
+    # Add any other fields if necessary
+})
+
 
                                                 
 
@@ -199,31 +205,72 @@ class Login(Resource):
                 "token": token,
                 "user": user_exists.toJSON()}, 200
 
-
-@rest_api.route('/api/users/edit')
-class EditUser(Resource):
+@rest_api.route('/api/users/createOrUpdate')
+class CreateOrUpdateUser(Resource):
     """
-       Edits User's username or password or both using 'user_edit_model' input
+    Edits User's and their Avatar's details using 'user_edit_model' input
     """
 
-    @rest_api.expect(user_edit_model)
-    @token_required
-    def post(self, current_user):
-
+    @rest_api.expect(user_create_or_update_model, validate=True)
+    def post(self):
         req_data = request.get_json()
 
-        _new_username = req_data.get("username")
-        _new_email = req_data.get("email")
+        # Extract fields
+        _username = req_data.get("username")
+        _email = req_data.get("email")
+        _password = req_data.get("password")
+        _posts_credit = req_data.get("posts_credit")
+        _spend_total = req_data.get("spend_total")
+        _spend_month = req_data.get("spend_month")
+        _leads_total = req_data.get("leads_total")
 
-        if _new_username:
-            self.update_username(_new_username)
+        # Avatar fields
+        _avatar_name = req_data.get("avatar_name")
+        _avatar_profile_id = req_data.get("avatar_profile_id")
+        _avatar_following = req_data.get("avatar_following")
+        _avatar_followers = req_data.get("avatar_followers")
 
-        if _new_email:
-            self.update_email(_new_email)
+        user = Users.get_by_email(_email)
+        if not user:
+            user = Users(email=_email)
+            if _password:
+                user.set_password(_password)
+        
+        # Updating user fields
+        if _username:
+            user.username = _username
+        if _posts_credit:
+            user.posts_credit = _posts_credit
+        if _spend_total:
+            user.spend_total = _spend_total
+        if _spend_month:
+            user.spend_month = _spend_month
+        if _leads_total:
+            user.leads_count = _leads_total
 
-        self.save()
+        # Update or create Avatar
+        avatar = Avatar.query.filter_by(user_id=user.id).first()
+        if not avatar:
+            avatar = Avatar(user_id=user.id)
+            db.session.add(avatar)
 
-        return {"success": True}, 200
+        # Update avatar fields
+        if _avatar_name:
+            avatar.name = _avatar_name
+        if _avatar_profile_id:
+            avatar.profile_image_id = _avatar_profile_id
+        if _avatar_following is not None:
+            avatar.following = _avatar_following
+        if _avatar_followers is not None:
+            avatar.followers = _avatar_followers
+
+        try:
+            db.session.commit()
+            user.save()
+            return {"success": True, "msg": "User and Avatar details updated successfully"}, 200
+        except Exception as e:
+            db.session.rollback()
+            return {"success": False, "msg": str(e)}, 500
 
 
 @rest_api.route('/api/users/logout')
@@ -240,8 +287,8 @@ class LogoutUser(Resource):
         jwt_block = JWTTokenBlocklist(jwt_token=_jwt_token, created_at=datetime.now(timezone.utc))
         jwt_block.save()
 
-        self.set_jwt_auth_active(False)
-        self.save()
+        current_user.set_jwt_auth_active(False)
+        current_user.save()
 
         return {"success": True}, 200
 

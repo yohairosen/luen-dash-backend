@@ -27,6 +27,8 @@ class Users(db.Model):
     spend_total = db.Column(db.Float(), default=0.0)
     spend_month = db.Column(db.Float(), default=0.0)
     leads_count = db.Column(db.Integer(), default=0)
+    posts_credit = db.Column(db.Integer(), default=0)
+    
 
     avatars = db.relationship('Avatar', backref='user', lazy='dynamic')
 
@@ -73,7 +75,8 @@ class Users(db.Model):
         cls_dict = {}
         cls_dict['_id'] = self.id
         cls_dict['username'] = self.username
-        cls_dict['email'] = self.email
+        cls_dict['email'] = self.email,
+        cls_dict['posts_credit'] = self.posts_credit
         # cls_dict['spend_total'] = self.spend_total
         # cls_dict['spend_month'] = self.spend_month
         # cls_dict['leads_count'] = self.leads_count

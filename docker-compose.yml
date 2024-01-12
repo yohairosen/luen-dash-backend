@@ -5,6 +5,8 @@ services:
     restart: always
     env_file: .env
     build: .
+    volumes:
+      - ./api:/app/api
     networks:
       - db_network
       - web_network
@@ -25,4 +27,3 @@ networks:
     driver: bridge
   web_network:
     driver: bridge
- 

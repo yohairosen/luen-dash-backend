@@ -10,5 +10,7 @@ ENV PYTHONUNBUFFERED 1
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN flask db upgrade
+
 # gunicorn
-CMD ["sh", "-c", "flask db upgrade && gunicorn --config gunicorn-cfg.py run:app"]
+CMD ["gunicorn", "--config", "gunicorn-cfg.py", "run:app"]

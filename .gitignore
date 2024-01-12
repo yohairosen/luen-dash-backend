@@ -8,5 +8,4 @@ yarn-error.log
 env/
 env__/
 .vscode/symbols.json
-api/db.sqlite3
-
+.DS_Store

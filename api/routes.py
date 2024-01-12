@@ -232,9 +232,13 @@ class CreateOrUpdateUser(Resource):
 
         user = Users.get_by_email(_email)
         if not user:
-            user = Users(email=_email)
+            user = Users(email=_email, username=_username)
             if _password:
                 user.set_password(_password)
+        
+        db.session.add(user)
+        db.session.flush()  
+        
         
         # Updating user fields
         if _username:
@@ -266,7 +270,6 @@ class CreateOrUpdateUser(Resource):
 
         try:
             db.session.commit()
-            user.save()
             return {"success": True, "msg": "User and Avatar details updated successfully"}, 200
         except Exception as e:
             db.session.rollback()

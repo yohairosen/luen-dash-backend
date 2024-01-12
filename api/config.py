@@ -56,7 +56,13 @@ class BaseConfig():
             print('> Error: DBMS Exception: ' + str(e) )
             print('> Fallback to SQLite ')    
 
-    if USE_SQLITE:
+    FLASK_ENV = os.getenv('FLASK_ENV', 'development')
 
-        # This will create a file in <app> FOLDER
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
+    # Configure SQLite paths for different environments
+    if USE_SQLITE:
+        if FLASK_ENV == 'production':
+            SQLITE_DB_FILE = 'db_prod.sqlite3'
+        else:
+            SQLITE_DB_FILE = 'db.sqlite3'
+
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, SQLITE_DB_FILE)

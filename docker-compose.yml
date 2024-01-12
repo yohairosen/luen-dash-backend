@@ -3,7 +3,7 @@ services:
   flask_api:
     container_name: flask_api
     restart: always
-    env_file: .env
+    env_file: .prod.env
     build: .
     volumes:
       - ./api:/api

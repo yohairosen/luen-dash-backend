@@ -33,9 +33,17 @@ def initialize_database():
 
         # fallback to SQLite
         BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-        app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
 
-        print('> Fallback to SQLite ')
+        print('> Error: DBMS Exception: ' + str(e))
+
+        # Choose the SQLite file based on FLASK_ENV
+        flask_env = app.config.get('FLASK_ENV', 'development')
+        sqlite_file = 'db_prod.sqlite3' if flask_env == 'production' else 'db.sqlite3'
+        sqlite_uri = 'sqlite:///' + os.path.join(BASE_DIR, sqlite_file)
+
+        # Fallback to the appropriate SQLite file
+        app.config['SQLALCHEMY_DATABASE_URI'] = sqlite_uri
+        print(f'> Fallback to SQLite: {sqlite_file}')
         db.create_all()
 
 """

@@ -16,6 +16,7 @@ from .models import Post, db, Users, Avatar, JWTTokenBlocklist
 from .config import BaseConfig
 import requests
 
+from flask_restx import abort
 
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
@@ -50,13 +51,17 @@ login_model = rest_api.model('LoginModel', {"email": fields.String(required=True
                                             })
 
 user_create_or_update_model = rest_api.model('UserCreateOrUpdateModel', {
-    "userID": fields.String(required=False, min_length=1, max_length=32),
-    "username": fields.String(required=True, min_length=2, max_length=32),
-    "email": fields.String(required=True, min_length=4, max_length=64),
+    "username": fields.String(required=False, min_length=2, max_length=32),
+    "email": fields.String(required=False, min_length=4, max_length=64),
     "spend_total": fields.Float(required=False),
     "spend_month": fields.Float(required=False),
-    "leads_count": fields.Integer(required=False)
-    # Add any other fields if necessary
+    "leads_total": fields.Integer(required=False),
+    "avatar_name": fields.String(required=False, min_length=4, max_length=64),
+    "avatar_profile_id": fields.String(required=False, min_length=4, max_length=64),
+    "avatar_following": fields.Integer(required=False),
+    "avatar_followers": fields.Integer(required=False),
+    "password": fields.String(required=False, min_length=4, max_length=64),
+    "posts_credit": fields.Integer(required=False),
 })
 
 
@@ -205,6 +210,13 @@ class Login(Resource):
                 "token": token,
                 "user": user_exists.toJSON()}, 200
 
+def validate_request(model_fields):
+    req_data = request.get_json()
+    extra_fields = set(req_data.keys()) - set(model_fields.keys())
+    if extra_fields:
+        abort(400, f"Unexpected fields in request: {', '.join(extra_fields)}")
+
+
 @rest_api.route('/api/users/createOrUpdate')
 class CreateOrUpdateUser(Resource):
     """
@@ -213,8 +225,10 @@ class CreateOrUpdateUser(Resource):
 
     @rest_api.expect(user_create_or_update_model, validate=True)
     def post(self):
+        
+        validate_request(user_create_or_update_model)  # Custom validation call
+        
         req_data = request.get_json()
-
         # Extract fields
         _username = req_data.get("username")
         _email = req_data.get("email")
@@ -232,9 +246,12 @@ class CreateOrUpdateUser(Resource):
 
         user = Users.get_by_email(_email)
         if not user:
+            
+            if not _password:
+                abort(400, "Password is required")
+                
             user = Users(email=_email, username=_username)
-            if _password:
-                user.set_password(_password)
+            user.set_password(_password)
         
         db.session.add(user)
         db.session.flush()  

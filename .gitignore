@@ -8,5 +8,6 @@ yarn-error.log
 env/
 env__/
 .vscode/symbols.json
-# app/db.sqlite3
+api/db.sqlite3
+api/db.sqlite3.tmp
 
